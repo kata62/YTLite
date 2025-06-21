@@ -34,11 +34,11 @@ on:
         required: true
         default: false
 
-     # ipa_url:
-      #  description: "URL to the decrypted IPA file"
-       # default: ""
-        #required: true
-        #type: string
+      ipa_url:
+        description: "URL to the decrypted IPA file"
+        default: ""
+        required: true
+        type: string
 
       tweak_version:
         description: "The version of the tweak to use. Enter the version manually from dayanch96/YTLite/releases or leave default"
@@ -85,15 +85,15 @@ jobs:
       - name: Hide sensitive inputs
         uses: levibostian/action-hide-sensitive-inputs@v1
 
-     # - name: Validate IPA URL
-      #  run: |
-       #   curl -L -r 0-1023 -o sample.part "${{ inputs.ipa_url }}" > /dev/null 2>&1
-        #  file_type=$(file --mime-type -b sample.part)
+      - name: Validate IPA URL
+        run: |
+          curl -L -r 0-1023 -o sample.part "${{ inputs.ipa_url }}" > /dev/null 2>&1
+          file_type=$(file --mime-type -b sample.part)
 
-         # if [[ "$file_type" != "application/x-ios-app" && "$file_type" != "application/zip" ]]; then
-          #  echo "::error::Validation failed: The file is not a valid IPA file. Detected type: $file_type."
-           # exit 1
-          #fi
+          if [[ "$file_type" != "application/x-ios-app" && "$file_type" != "application/zip" ]]; then
+            echo "::error::Validation failed: The file is not a valid IPA file. Detected type: $file_type."
+            exit 1
+          fi
 
       - name: Install Dependencies
         run: brew install make ldid
@@ -142,7 +142,7 @@ jobs:
 
       - name: Download YouTube
         id: download_youtube
-        run: wget  --no-verbose -O ${{ github.workspace }}/youtube.ipa
+        run: wget "${{ inputs.ipa_url }}" --no-verbose -O ${{ github.workspace }}/youtube.ipa
 
       - name: Clone Open in YouTube (Safari extension)
         run: |
@@ -298,15 +298,12 @@ jobs:
           cyan -i youtube.ipa -o YouTubePlus_${{ inputs.tweak_version }}.ipa -uwef $tweaks -n "${{ inputs.display_name }}" -b ${{ inputs.bundle_id }}
 
       - name: Upload to GitHub Releases
-        uses: actions/upload-artifact@v4
+        uses: softprops/action-gh-release@v2.0.1
         with:
           name: YouTubePlus v${{ inputs.tweak_version }} (${{ github.run_number }})
-          path: |
-           YouTubePlus_${{ inputs.tweak_version }}.ipa
-         # draft: true
+          files: YouTubePlus_${{ inputs.tweak_version }}.ipa
+          draft: true
 
       - name: Output Release URL
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: YouTubePlus_${{ inputs.tweak_version }}.ipa
+        run: |
+          echo "::notice::Release available at: https://github.com/${{ github.repository }}/releases"
