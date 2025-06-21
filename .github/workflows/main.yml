@@ -34,11 +34,11 @@ on:
         required: true
         default: false
 
-      ipa_url:
-        description: "URL to the decrypted IPA file"
-        default: ""
-        required: true
-        type: string
+     # ipa_url:
+      #  description: "URL to the decrypted IPA file"
+       # default: ""
+        #required: true
+        #type: string
 
       tweak_version:
         description: "The version of the tweak to use. Enter the version manually from dayanch96/YTLite/releases or leave default"
@@ -298,12 +298,15 @@ jobs:
           cyan -i youtube.ipa -o YouTubePlus_${{ inputs.tweak_version }}.ipa -uwef $tweaks -n "${{ inputs.display_name }}" -b ${{ inputs.bundle_id }}
 
       - name: Upload to GitHub Releases
-        uses: softprops/action-gh-release@v2.0.1
+        uses: actions/upload-artifact@v4
         with:
           name: YouTubePlus v${{ inputs.tweak_version }} (${{ github.run_number }})
-          files: YouTubePlus_${{ inputs.tweak_version }}.ipa
-          draft: true
+          path: |
+           YouTubePlus_${{ inputs.tweak_version }}.ipa
+         # draft: true
 
       - name: Output Release URL
-        run: |
-          echo "::notice::Release available at: https://github.com/${{ github.repository }}/releases"
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: YouTubePlus_${{ inputs.tweak_version }}.ipa
